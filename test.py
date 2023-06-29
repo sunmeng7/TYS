@@ -39,7 +39,6 @@ def main_worker(args):
     args.gpu = 0
     torch.backends.cudnn.benchmark = True
 
-    # 数据集文件夹的路径 # Path(args.image_text_folder) = 'data/mmvoxceleb/test'
     assert Path(args.image_text_folder).exists(
     ), f'The path {args.image_text_folder} was not found.'
 
@@ -49,7 +48,6 @@ def main_worker(args):
         args.batch_size = 16  # make samples reproducible
 
     # logging
-    # vox_bert_text_bs48_100k.pt 是text2video训练好的权重文件
     dalle_path = Path(args.dalle_path) if exists(args.dalle_path) else None
     if args.dalle_path is None:
         checkpoints = natsort.natsorted(
@@ -72,8 +70,7 @@ def main_worker(args):
     args.solo_output = solo_output
 
     assert args.dalle_path
-    which_ckpt = str(dalle_path).split('/')[-2] # 现在显示的是所在根目录下的文件夹
-    # print(which_ckpt)
+    which_ckpt = str(dalle_path).split('/')[-2]
 
     if args.eval_mode == 'eval':
         args.log_metric_dir = log_dir / 'metrics' / which_ckpt
@@ -88,7 +85,6 @@ def main_worker(args):
                                                 'DALLE: ' + args.name, resume)
 
     # tokenizer
-
     if args.fixed_language_model is not None:
         tokenizer2, language_model, text_feature_dim, encode_text = get_fixed_language_model(
             args)
@@ -99,11 +95,10 @@ def main_worker(args):
         text_feature_dim = 0
         tokenizer = get_tokenizer(args)
 
-    # model path   utils_args.py-556
-
-    if args.vae_path == '':    # 预训练模型
+    # model path
+    if args.vae_path == '':
         args.vae_path = None
-    if args.cvae_path == '':    # 视觉控制的模型
+    if args.cvae_path == '':
         args.cvae_path = None
 
     args.use_cvae = args.use_cvae or args.cvae_path is not None
@@ -138,7 +133,7 @@ def main_worker(args):
     )
 
     assert exists(dalle_path), 'DALLE model file does not exist'
-    ckpt = torch.load(str(dalle_path))  # 加载权重文件  , map_location=torch.device('cpu')
+    ckpt = torch.load(str(dalle_path))
     model_weights = ckpt['weights']
 
     image_size = args.image_size or vae.image_size
@@ -158,7 +153,6 @@ def main_worker(args):
 
     if model_weights is not None:
         dalle.load_state_dict(model_weights, strict=False)  # copy param   _0缺, _1, _2 多
-        # , strict=False
 
     set_requires_grad(dalle, False)
     dalle = model_to_gpu(dalle, args.gpu, True)
@@ -221,20 +215,20 @@ def main_worker(args):
 
         text_neg, visuals_neg = None, None
         if args.negvc:
-            text, frames, visuals, visuals_neg, text_neg = next(dl_iter)    # 迭代下一项
+            text, frames, visuals, visuals_neg, text_neg = next(dl_iter)
             visuals_neg, text_neg = map(lambda t: t.cuda(),
                                         (visuals_neg, text_neg))
         else:
             text, frames, visuals = next(dl_iter)  # frames [B, T, C, H, W] # num_visuals=0
         if args.visual and len(visuals.shape) == 4:
-            assert args.num_visuals == 1    # 这个值是干嘛的 test中是0
+            assert args.num_visuals == 1
             visuals = visuals.unsqueeze(1)
 
         if args.fp16:
             frames = frames.half()
 
         frames, visuals = map(lambda t: t.cuda(), (frames, visuals))
-        if args.fixed_language_model is not None:   # 文本数据增强
+        if args.fixed_language_model is not None:
             text_description = text
             with torch.no_grad():
                 encoded_input = tokenizer2(

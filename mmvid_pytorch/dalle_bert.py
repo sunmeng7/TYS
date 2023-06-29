@@ -437,11 +437,6 @@ class BERT(nn.Module):
                                              ratio=(0.5, 2),
                                              value=self.num_image_tokens)
 
-        # self.to_discriminate = nn.Sequential(
-        #     nn.Linear(dim, 1),
-        #     nn.LeakyReLU(),
-        #     nn.Sigmoid()
-        # )
 
     @torch.no_grad()
     @eval_decorator
@@ -1019,16 +1014,6 @@ class BERT(nn.Module):
                     else:
                         loss_dis += (1-similarity[i][j]) * 0.5
                     loss_dis += similarity[i][j]
-        # simloss = similarity[0][1]+similarity[0][2]+similarity[0][3]+similarity[1][2]+similarity[1][3]+similarity[2][3]
-        # print(simloss)
-        ############################
-        # loss_dis =
-        # emb = embeddings[0]
-        # emb[0]  8* 第一列
-
-
-
-
 
         # NOTE: Masked Sequence Modeling -- MSM
         #   Masking strategies:
@@ -1171,9 +1156,6 @@ class BERT(nn.Module):
                             weight_neg)
         else:
             loss_vid = torch.tensor(0.0, device=device)
-
-
-
 
         # return loss_msm, loss_rel, loss_vid
         return loss_msm, loss_rel, loss_vid, loss_dis

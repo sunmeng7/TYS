@@ -1,7 +1,6 @@
 from pathlib import Path
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
-# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 import random
 
 from datetime import datetime
@@ -99,7 +98,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     else:
         raise NotImplementedError("Only DistributedDataParallel is supported.")
-    # 如果它的条件返回错误，则终止程序执行--这里是数据集地址
+
     assert Path(args.image_text_folder).exists(
     ), f'The path {args.image_text_folder} was not found.'
 
@@ -134,9 +133,7 @@ def main_worker(gpu, ngpus_per_node, args):
         text_feature_dim = 0
         tokenizer = get_tokenizer(args)
 
-    # model path  --cvae for image condition (VQGAN)
-    # --vae_path ./pretrained_models/vae_vox.ckpt
-    # --dalle_path ./dalle_path/vox_bert_text_bs48_100k.pt
+    # model path
     args.use_cvae = args.cvae_path is not None
     dalle_path = Path(args.dalle_path) if exists(args.dalle_path) else None
 
@@ -176,21 +173,8 @@ def main_worker(gpu, ngpus_per_node, args):
         openai_clip_path=args.openai_clip_model_path,
     )
 
-    # if not resume and dalle_path is given, load weights
-    # if dalle_path is not None:
-    #     assert exists(dalle_path), 'DALLE model file does not exist'
-    #     ckpt = torch.load(str(dalle_path))  # 先反序列化字典对象,然后再调用该方法 load-->load_state_dict
-    #     model_weights = ckpt['weights']
-
-    if args.resume_path:
-        ckpt = torch.load(str(args.resume_path))
-        model_weights = ckpt['weights']
-        # model_weights['text_feature_mapping.weight'] = model_weights['text_feature_mapping.weight'].T
-        start_iter = ckpt['iter']
-        optim_weights = ckpt['optimizer']
-        # optim_weights['state'][0]['exp_avg'] = optim_weights['state'][0]['exp_avg'].T
-        # optim_weights['state'][0]['exp_avg_sq'] = optim_weights['state'][0]['exp_avg_sq'].T
-    else:
+    if dalle_path is not None:
+        assert exists(dalle_path), 'DALLE model file does not exist'
         ckpt = torch.load(str(dalle_path))  # 先反序列化字典对象,然后再调用该方法 load-->load_state_dict
         model_weights = ckpt['weights']
 
@@ -201,44 +185,35 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # initialize DALL-E / BERT and optimizer
     if args.ar:
-        from mmvid_pytorch.dalle_artv import DALLE      # ART-V是 DALL-E 的 auto transformer 和 VQGAN 的 auto encoder 组合
+        from mmvid_pytorch.dalle_artv import DALLE
         dalle = DALLE(vae=vae, cvae=cvae, **dalle_params)
     else:
-        from mmvid_pytorch.dalle_bert import BERT   # 用的这个
+        from mmvid_pytorch.dalle_bert import BERT
         dalle = BERT(vae=vae, cvae=cvae, **dalle_params)
     if args.fp16:
-        dalle = dalle.half()    # 将所有的浮点参数和缓冲转换为半浮点(half)数据类型
+        dalle = dalle.half()
 
-    opt = get_optimizer(args, get_trainable_params(dalle))  # Adam
+    opt = get_optimizer(args, get_trainable_params(dalle))
 
-    if model_weights is not None:   # 各层和参数tensor的关系字典state_dict   当前运行环境和预训练环境(3.8)不一致的问题
-        dalle.load_state_dict(model_weights, strict=False)    # , strict=False --unexpected错误
+    if model_weights is not None:
+        dalle.load_state_dict(model_weights, strict=False)
         del ckpt
 
     if optim_weights is not None:
         opt.load_state_dict(optim_weights)
-        # opt.state = {key: opt.state[key]['exp_avg'].cuda() for key in opt.state}
-        # opt.state = {key: opt.state[key]['exp_avg_sq'].cuda() for key in opt.state}
         for k in opt.state:
             for kk in opt.state[k]:
                 if kk == 'exp_avg':
                     opt.state[k][kk] = opt.state[k][kk].cuda()
                 elif kk == 'exp_avg_sq':
                     opt.state[k][kk] = opt.state[k][kk].cuda()
-        # print3 = opt.state.values()
-        # print1['exp_avg'].cuda()
-        # print3['exp_avg'].cuda()
-        # print3['exp_avg_sq'].cuda()
-        # exp_avg
-        # exp_avg_sq
     dalle = model_to_gpu(dalle, args.gpu, True)
     dalle_module = dalle.module
 
     scheduler_step = dummy_lr_scheduler_step
-    if args.lr_decay:   # 学习率衰减
+    if args.lr_decay:
         _, scheduler_step = prepare_lr_scheduler(args, opt)
 
-    # create dataset and dataloader
     args.is_shuffle = True
 
     '''
@@ -288,7 +263,7 @@ def main_worker(gpu, ngpus_per_node, args):
             print('done!')
             break
 
-        if args.negvc:  # 负样本, 在批处理时交换控制序列
+        if args.negvc:
             text, frames, visuals, visuals_neg, text_neg = next(distr_dl_iter)
             visuals_neg, text_neg = map(lambda t: t.cuda(),
                                         (visuals_neg, text_neg))
@@ -303,7 +278,7 @@ def main_worker(gpu, ngpus_per_node, args):
             frames = frames.half()
         frames, visuals = map(lambda t: t.cuda(), (frames, visuals))
 
-        if args.fixed_language_model is not None:   # 文本增强的语言模型
+        if args.fixed_language_model is not None:
             text_description = text
             with torch.no_grad():
                 encoded_input = tokenizer2(
@@ -327,8 +302,6 @@ def main_worker(gpu, ngpus_per_node, args):
         target = frames[:, :args.num_targets, ...]
 
         # Train dalle
-        # mmvid_pytorch/dalle_bert.py -- BERT
-        # loss_msm, loss_rel, loss_vid = dalle(
         loss_msm, loss_rel, loss_vid, loss_dis = dalle(
             text,
             visual=visuals if

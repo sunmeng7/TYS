@@ -1,10 +1,10 @@
-python3 train.py --name tys_nor_modifytxt_0301 \
-    --image_text_folder ./data/mmvoxceleb/tys_train \
-    --dataset video_text --batch_size 4 \
+python3 train.py --name tys_20_0308 \
+    --image_text_folder /home/sunmeng/mmvid/data/mmvoxceleb/tys_train \
+    --dataset video_text --batch_size 6 \
     --text_seq_len 50 \
-    --iters 300000 \
-    --num_workers 0 \
-    --log_every 500 --sample_every 5000 \
+    --iters 200000 \
+    --num_workers 0 --fixed_language_model roberta-large \
+    --log_every 200 --sample_every 5000 \
     --n_sample 4 --n_per_sample 4 --num_visuals 0 \
     --num_targets 8 --frame_num 8 --frame_step 4 \
     --image_size 128 --beta_msm 7 \
