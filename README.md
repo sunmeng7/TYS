@@ -1,4 +1,4 @@
-# (TYS)Tell Your Story: Text-Driven Face Video Synthesis With High Diversity via Adversarial Learning (ICIP 2023)
+# (TYS)Tell Your Story: Text-Driven Face Video Synthesis With High Diversity via Adversarial Learning 
 
 ## Our pipeline
 <img width="721" alt="fig222" src="https://github.com/sunmeng7/TYS/assets/50901976/dd6f03f5-d209-41ce-a051-19e27b2fb984">
