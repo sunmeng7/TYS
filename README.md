@@ -5,7 +5,8 @@
 
 
 ## Visual Results
-![image](https://github.com/sunmeng7/TYS/picture/readme.gif)
+![image](https://github.com/sunmeng7/TYS/tree/master/picture/readme.gif)
+![readme](https://github.com/sunmeng7/TYS/assets/50901976/96252d80-f97e-474b-b587-88739165ae02)
 
 ## Acknowledgement
 We have used codes from other great research work, including 
