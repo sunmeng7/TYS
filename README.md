@@ -1,12 +1,10 @@
 # (TYS)Tell Your Story: Text-Driven Face Video Synthesis With High Diversity via Adversarial Learning 
 
 ## Our pipeline
-<img width="721" alt="fig222" src="https://github.com/sunmeng7/TYS/picture/fig222.png">
-
+![image](picture/fig222.png)
 
 ## Visual Results
-![image](https://github.com/sunmeng7/TYS/tree/master/picture/readme.gif)
-![readme](https://github.com/sunmeng7/TYS/assets/50901976/96252d80-f97e-474b-b587-88739165ae02)
+![image](picture/readme.gif)
 
 ## Acknowledgement
 We have used codes from other great research work, including 
