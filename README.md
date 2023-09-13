@@ -1,6 +1,6 @@
 # (TYS)Tell Your Story: Text-Driven Face Video Synthesis With High Diversity via Adversarial Learning 
 
-[code](https://ieeexplore.ieee.org/document/10222631)
+[paper](https://ieeexplore.ieee.org/document/10222631)
 
 ## Our pipeline
 ![image](picture/fig222.png)
