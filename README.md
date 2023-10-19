@@ -8,6 +8,11 @@
 ## Visual Results
 ![image](picture/readme.gif)
 
+## Model
+link：https://pan.baidu.com/s/1IQv8b6M0ZlhlwhPjU7g4lQ 
+
+code：gbpg 
+
 ## Acknowledgement
 We have used codes from other great research work, including 
 [MMVID](https://github.com/snap-research/MMVID), 
